@@ -15,11 +15,12 @@ def main():
     load_dotenv()
     access_token = os.getenv('API_TOKEN')  # use service token (applied for open accounts)
 
-    #friends_path, distance = bfs(access_token, start_id='20067703', finish_id=16109999)
-    #print(*friends_path)
-    #print(f'You are {distance} handshakes away from this person')
-    print(get_id(access_token, 'carrillo230502'))
-    print(type(get_id(access_token, 'olgabzova')))
+    start_id = get_id(access_token, 'id20067703')
+    finish_id = get_id(access_token, 'just_a_happy_person')
+    friends_path, distance = bfs(access_token, start_id=start_id, finish_id=finish_id)
+    print()
+    visualize_path(access_token, friends_path)
+    print(f'You are {distance} handshakes away from this person')
 
 
 
@@ -51,7 +52,7 @@ def bfs(token, start_id, finish_id):
     while finish_id not in distances and queue:
         current_user = queue.popleft()
         friends_list = get_friends_list(token, current_user)
-        sleep(0.25)
+        #sleep(0.25)
         for user in tqdm(friends_list):
             if user not in distances:
                 distances[user] = distances[current_user] + 1
@@ -72,7 +73,7 @@ def bfs(token, start_id, finish_id):
 
 
 def get_id(token, screen_name):
-    """Getting user id by his screen_name (domain name)"""
+    """Getting user id by screen_name (domain name)"""
 
     url = 'https://api.vk.com/method/utils.resolveScreenName'
     params = {
@@ -88,9 +89,36 @@ def get_id(token, screen_name):
         return None
 
 
-def visualize_path(path):
+def get_user_info(token, user_id):
+    """Get user info"""
+
+    url = 'https://api.vk.com/method/users.get'
+    params = {
+        'user_ids': user_id,
+        'fields': 'domain',
+        'access_token': token,
+        'v': 5.122
+    }
+    resp = make_request(url, params)
+    resp = resp.json()
+    return resp
+
+
+def visualize_path(token, path: list):
     """Man-understandable representation of friends path
             (first_name, last_name and link)"""
+
+    count = 1
+    for user in path:
+        info = get_user_info(token, user)
+        first_name = info['response'][0]['first_name']
+        last_name = info['response'][0]['last_name']
+        domain = info['response'][0]['domain']
+
+        print(f'{count}. {first_name} {last_name}')
+        print(f'https://vk.com/{domain}')
+        print()
+        count += 1
 
 
 def make_request(url, params=None):
@@ -110,4 +138,3 @@ def make_request(url, params=None):
 
 if __name__ == '__main__':
     main()
-
