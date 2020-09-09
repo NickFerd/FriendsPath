@@ -8,20 +8,22 @@ from time import sleep
 
 
 def main():
-    """Script for building paths of friends from one VK user to another with VK_Api.
+    """Script for building paths of friends from one VK user to another using VK_Api.
     Uses breadth-first search algorithm."""
 
     # Safe storage of API_TOKEN as environmental variable
     load_dotenv()
-    access_token = os.getenv('API_TOKEN')  # use service token (applied for open accounts)
+    access_token = os.getenv('API_TOKEN')  # use service token (only applied for open accounts)
 
     start_id = get_id(access_token, 'id20067703')
-    finish_id = get_id(access_token, 'just_a_happy_person')
+    finish_id = get_id(access_token, 'id184488335')
+
+    # Build path if possible
     friends_path, distance = bfs(access_token, start_id=start_id, finish_id=finish_id)
-    print()
+
+    # Result output
     visualize_path(access_token, friends_path)
     print(f'You are {distance} handshakes away from this person')
-
 
 
 def get_friends_list(token, user_id):
@@ -35,9 +37,11 @@ def get_friends_list(token, user_id):
 
     resp = make_request(url, params)
     resp = resp.json()
+
     if 'response' in resp:  # check for correct response
         return resp['response']['items']
-    else:
+    elif 'error' in resp:
+        print(f"{resp['error']['error_code']} - {resp['error']['error_msg']}, User ID - {user_id}")
         return []
 
 
@@ -53,11 +57,12 @@ def bfs(token, start_id, finish_id):
         current_user = queue.popleft()
         friends_list = get_friends_list(token, current_user)
         #sleep(0.25)
-        for user in tqdm(friends_list):
-            if user not in distances:
-                distances[user] = distances[current_user] + 1
-                parents[user] = current_user
-                queue.append(user)
+        if len(friends_list) != 0:
+            for user in tqdm(friends_list):
+                if user not in distances:
+                    distances[user] = distances[current_user] + 1
+                    parents[user] = current_user
+                    queue.append(user)
 
     # Build path
     path = [finish_id]
@@ -105,7 +110,7 @@ def get_user_info(token, user_id):
 
 
 def visualize_path(token, path: list):
-    """Man-understandable representation of friends path
+    """Man-readable representation of friends path
             (first_name, last_name and link)"""
 
     count = 1
