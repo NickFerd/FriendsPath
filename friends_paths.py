@@ -16,24 +16,25 @@ def main():
     access_token = os.getenv('API_TOKEN')  # use service token (only applied for open accounts)
 
     start_id = get_id(access_token, 'id20067703')
-    finish_id = get_id(access_token, 'id184488335')
+    finish_id = get_id(access_token, 'keyaaa')
 
     # Build path if possible
     friends_path, distance = bfs(access_token, start_id=start_id, finish_id=finish_id)
 
     # Result output
     visualize_path(access_token, friends_path)
-    print(f'You are {distance} handshakes away from this person')
+    print(f'You are {distance} handshakes away from this person!')
 
 
-def get_friends_list(token, user_id):
+def get_friends_list(token, user_id, offset=0):
     """Returns a list of user's friends IDs if account is open,
     Else returns empty list."""
 
     url = 'https://api.vk.com/method/friends.get'
     params = {'user_id': user_id,
               'access_token': token,
-              'v': 5.122}
+              'v': 5.122,
+              'offset': offset}
 
     resp = make_request(url, params)
     resp = resp.json()
@@ -53,9 +54,14 @@ def bfs(token, start_id, finish_id):
     distances = {start_id: 0}
     parents = {start_id: None}
     queue = deque([start_id])
+    offset = 0
     while finish_id not in distances and queue:
         current_user = queue.popleft()
-        friends_list = get_friends_list(token, current_user)
+        if offset:
+            friends_list = get_friends_list(token, current_user, offset)
+        else:
+            friends_list = get_friends_list(token, current_user)
+        offset = 0
         #sleep(0.25)
         if len(friends_list) != 0:
             for user in tqdm(friends_list):
@@ -63,6 +69,9 @@ def bfs(token, start_id, finish_id):
                     distances[user] = distances[current_user] + 1
                     parents[user] = current_user
                     queue.append(user)
+            if len(friends_list) == 5000:
+                queue.appendleft(current_user)
+                offset = 5000
 
     # Build path
     path = [finish_id]
@@ -143,3 +152,4 @@ def make_request(url, params=None):
 
 if __name__ == '__main__':
     main()
+
