@@ -1,4 +1,4 @@
-# Friend Paths (VK_API)
+# Friends Path
 
 Friends Paths is a script that finds and builds a path of friends between two people.
 Script uses breadth-first search algorithm and makes calls via VK_API.
