@@ -1,9 +1,9 @@
 # ignore folder
 __pycache__
 .idea
+venv
 
 # ignore file
 .env
-
 
 
