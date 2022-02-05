@@ -48,7 +48,7 @@ def get_id(token, screen_name):
         return resp['response']['object_id']
     else:
         print("Can't resolve this user screen name - ", screen_name)
-        return None
+        raise LookupError
 
 
 def get_friends_list(token, user_id, offset=0) -> list:

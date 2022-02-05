@@ -6,6 +6,7 @@ from time import sleep
 
 from dotenv import load_dotenv
 from tqdm import tqdm
+import click
 
 from api_utils import (
     get_user_info,
@@ -14,8 +15,15 @@ from api_utils import (
 )
 
 
-def main():
-    """Script for building paths of friends from one VK user to another
+@click.command()
+@click.option('--start', '-s', required=True,
+              prompt='Insert starting person screen name',
+              help='Start screen name.')
+@click.option('--finish', '-f', required=True,
+              prompt="Insert ",
+              help='Finish screen name.')
+def main(start: str, finish: str):
+    """CLI script for building paths of friends from one VK user to another
     using VK_Api.
     Uses breadth-first search algorithm."""
 
@@ -23,15 +31,16 @@ def main():
     load_dotenv()
     access_token = os.getenv('API_TOKEN')  # (only applied for open accounts)
 
-    start_id = get_id(access_token, 'dobryytema')
-    finish_id = get_id(access_token, 'id20067703')
+    start_id = get_id(access_token, start)
+    finish_id = get_id(access_token, finish)
 
     # Build path if possible
-    friends_path, distance = bfs(access_token, start_id=start_id, finish_id=finish_id)
+    friends_path, distance = bfs(access_token, start_id=start_id,
+                                 finish_id=finish_id)
 
     # Result output
     visualize_path(access_token, friends_path)
-    print(f'You are {distance} handshakes away from this person!')
+    print(f'These people {distance} handshakes away from each other!')
 
 
 def bfs(token, start_id, finish_id):
@@ -67,7 +76,7 @@ def bfs(token, start_id, finish_id):
     try:
         parent = parents[finish_id]
     except KeyError:
-        return None
+        return [], {}
     else:
         while parent is not None:
             path.append(parent)
@@ -86,7 +95,7 @@ def visualize_path(token, path: list):
         domain = info['response'][0]['domain']
 
         print(f'{index}. {first_name} {last_name}')
-        print(f'https://vk.com/{domain}', sep='\n')
+        print(f'https://vk.com/{domain}')
 
 
 if __name__ == '__main__':
